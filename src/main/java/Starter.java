@@ -12,37 +12,37 @@ public class Starter {
         final int topWordsToCompare = 1000;
         final int DEBUG_ENTRIES = 15;
 
-        printBanner("Start");
+        Utils.printBanner("Start");
         // a) Read all files
 
         // Read all ham mails
-        printBanner("Top Ham Words");
+        Utils.printBanner("Top Ham Words");
         Map<String, Double> hamWords = new HashMap<>();
         for (File file : returnListOfFilesInDir("C:/Repos/bayes-spam-filter/src/main/resources/test/ham-test")) {
             readWordsAndPutCount(hamWords, file);
         }
-        showTopNEntries(hamWords, DEBUG_ENTRIES);
-        printBanner("Size of Ham Words");
+        MapUtils.showTopNEntries(hamWords, DEBUG_ENTRIES);
+        Utils.printBanner("Size of Ham Words");
         System.out.println(hamWords.keySet().size());
 
         // Read all spam mails
-        printBanner("Top Spam Words");
+        Utils.printBanner("Top Spam Words");
         Map<String, Double> spamWords = new HashMap<>();
         for (File file : returnListOfFilesInDir("C:/Repos/bayes-spam-filter/src/main/resources/test/spam-test")) {
             readWordsAndPutCount(spamWords, file);
         }
-        showTopNEntries(spamWords, DEBUG_ENTRIES);
-        printBanner("Size of Spam Words");
+        MapUtils.showTopNEntries(spamWords, DEBUG_ENTRIES);
+        Utils.printBanner("Size of Spam Words");
         System.out.println(spamWords.keySet().size());
 
         // b) Rebalance
         // Reasoning: If one word is not contained in one of the sets, the probability for P(H) (or P(S) for that matter) becomes 0
-        rebalance(hamWords, spamWords, ALPHA);
-        printBanner("Bottom Ham Words");
-        showBottomNEntries(hamWords, DEBUG_ENTRIES);
+        MapUtils.rebalance(hamWords, spamWords, ALPHA);
+        Utils.printBanner("Bottom Ham Words");
+        MapUtils.showBottomNEntries(hamWords, DEBUG_ENTRIES);
 
-        printBanner("Bottom Spam Words");
-        showBottomNEntries(spamWords, DEBUG_ENTRIES);
+        Utils.printBanner("Bottom Spam Words");
+        MapUtils.showBottomNEntries(spamWords, DEBUG_ENTRIES);
 
         // c) Calibrate
 
@@ -82,9 +82,9 @@ public class Starter {
                 j++;
             }
             i++;
-            printBanner(String.format("%s: %s", file.getName(), spamProb));
+            Utils.printBanner(String.format("%s: %s", file.getName(), spamProb));
         }
-        printBanner(String.format("%s out of %s Ham Mails where categorized as spam", j, i));
+        Utils.printBanner(String.format("%s out of %s Ham Mails where categorized as spam", j, i));
 
         // If Ham Mail failed with P(H) < 0.5, add the words to ham
 
@@ -118,41 +118,6 @@ public class Starter {
     public static List<File> returnListOfFilesInDir(String path) {
         File folder = new File(path);
         return Arrays.stream(folder.listFiles()).toList();
-    }
-
-    public static List<Map.Entry<String, Double>> getTopNEntries(Map<String, Double> map, int n) {
-        return map.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed()).limit(n).toList();
-    }
-
-    public static void showTopNEntries(Map<String, Double> map, int n) {
-        // https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values
-        getTopNEntries(map, n).forEach(stringIntegerEntry -> System.out.println(stringIntegerEntry));
-    }
-
-    public static List<Map.Entry<String, Double>> getBottomNEntries(Map<String, Double> map, int n) {
-        return map.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue()).limit(n).toList();
-    }
-
-    public static void showBottomNEntries(Map<String, Double> map, int n) {
-       getBottomNEntries(map, n).forEach(stringIntegerEntry -> System.out.println(stringIntegerEntry));
-    }
-
-    public static void printBanner(String message) {
-        System.out.println(String.format("------------- %s -------------", message));
-    }
-    
-    public static void rebalance(Map<String, Double> map1, Map<String, Double> map2, double alpha) {
-        for (String key : map1.keySet()) {
-            if(!map2.containsKey(key)) {
-                map2.put(key, alpha);
-            }
-        }
-
-        for (String key : map2.keySet()) {
-            if(!map1.containsKey(key)) {
-                map1.put(key, alpha);
-            }
-        }
     }
 
     public static BigDecimal getProbabilityOfWordInMap(String word, Map<String, Double> map) {
