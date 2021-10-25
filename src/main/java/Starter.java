@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.*;
 
@@ -9,7 +10,6 @@ public class Starter {
     public static void main(String[] args) {
         final double ALPHA = 0.001;
         final double S_THRESHOLD = 0.5;
-        final int topWordsToCompare = 1000;
         final int DEBUG_ENTRIES = 15;
 
         Utils.printBanner("Start");
@@ -46,23 +46,12 @@ public class Starter {
 
         // c) Calibrate
 
-        /**
-         * // Select a top number of Spam Words to compare
-        List<Map.Entry<String, Double>> topSpamWords = getTopNEntries(spamWords, topWordsToCompare);
-        // Map the word to the number of occurences of all words first in spam, than in ham
-        List<Double> probabilityToOccurInSpam = topSpamWords.stream().map(entry -> {
-            return getProbabilityOfWordInMap(entry.getKey(), spamWords);
-        }).toList();
-
-        List<Double> probabilityToOccurInHam = topSpamWords.stream().map(entry -> {
-            return getProbabilityOfWordInMap(entry.getKey(), hamWords);
-        }).toList();**/
-
         // Read all HAM Mail
         int i = 0;
         int j = 0;
         Map<String, Double> validHam;
-        for (File file : returnListOfFilesInDir("C:/Repos/bayes-spam-filter/src/main/resources/valid/ham-kallibrierung")) {
+        List<File> files = returnListOfFilesInDir("C:/Repos/bayes-spam-filter/src/main/resources/valid/spam-kallibrierung");
+        for (File file : files) {
             validHam = new HashMap<>();
             BigDecimal validHamProbabilityProduct = BigDecimal.ONE;
             BigDecimal validSpamProbabilityProduct = BigDecimal.ONE;
@@ -70,26 +59,20 @@ public class Starter {
             // For each word in the dataset, calculate the probability of the words being spam or ham
             for (Map.Entry<String, Double> e : validHam.entrySet()) {
                 validHamProbabilityProduct = validHamProbabilityProduct.multiply(
-                        getProbabilityOfWordInMap(e.getKey(), hamWords).multiply(BigDecimal.valueOf(e.getValue()))
+                        BayesUtils.getProbabilityOfWordInMap(e.getKey(), hamWords).pow(e.getValue().intValue())
                 );
-
                 validSpamProbabilityProduct = validSpamProbabilityProduct.multiply(
-                        getProbabilityOfWordInMap(e.getKey(), spamWords).multiply(BigDecimal.valueOf(e.getValue()))
+                        BayesUtils.getProbabilityOfWordInMap(e.getKey(), spamWords).pow(e.getValue().intValue())
                 );
             }
-            BigDecimal spamProb = getSpamProbability(validSpamProbabilityProduct, validHamProbabilityProduct, BigDecimal.valueOf(S_THRESHOLD));
+            BigDecimal spamProb = BayesUtils.getSpamProbability(validSpamProbabilityProduct, validHamProbabilityProduct, BigDecimal.valueOf(S_THRESHOLD));
             if(spamProb.doubleValue() >= 0.5) {
                 j++;
             }
             i++;
-            Utils.printBanner(String.format("%s: %s", file.getName(), spamProb));
+            Utils.printBanner(String.format("%s of %s, %s: %s", i, files.size(), file.getName(), spamProb));
         }
         Utils.printBanner(String.format("%s out of %s Ham Mails where categorized as spam", j, i));
-
-        // If Ham Mail failed with P(H) < 0.5, add the words to ham
-
-        // Read all Spam Mail
-        // If Spam Mail failed with P(S) < 0.5, add the words to spam
     }
 
     public static void readWordsAndPutCount(Map<String, Double> map, File file) {
@@ -118,27 +101,5 @@ public class Starter {
     public static List<File> returnListOfFilesInDir(String path) {
         File folder = new File(path);
         return Arrays.stream(folder.listFiles()).toList();
-    }
-
-    public static BigDecimal getProbabilityOfWordInMap(String word, Map<String, Double> map) {
-        // https://stackoverflow.com/questions/39851350/reducing-map-by-using-java-8-stream-api
-        double countOfWords = map.values().stream().reduce(0d, (a, b) -> a + b);
-        System.out.println(countOfWords);
-        if(map.containsKey(word)) {
-            return BigDecimal.ONE.divide(BigDecimal.valueOf(countOfWords), 2, RoundingMode.HALF_UP);
-        }
-        return BigDecimal.ONE;
-    }
-
-    public static BigDecimal getSpamProbability(BigDecimal spamProb, BigDecimal hamProb, BigDecimal spamThreshold) {
-        BigDecimal hamThreshold = BigDecimal.ONE.subtract(spamThreshold);
-        // Divide the spam bias * spam values by (spam bias * spam values) + (ham bias * ham values)
-        return (spamProb.multiply(spamThreshold).divide(
-                        (spamProb.multiply(spamThreshold).add(hamProb.multiply(hamThreshold))),
-                2, RoundingMode.HALF_UP));
-    }
-
-    public static double reduceListToProduct(List<Double> list) {
-        return list.stream().reduce(1.0, (a, b) -> a * b);
     }
 }
