@@ -27,9 +27,12 @@ public class BayesSpamFilter {
         System.out.println(String.format("Used alpha: %s, used spamThreshold: %s", alpha, threshold));
     }
 
+    // Learns the contents of a whole folder
+    // Puts the result in a map Word::Occurrence
     private int learnFolder(String path, Map<String, Double> target) {
         int i = 0;
         File folder = new File(path);
+        // Go through each file
         for(File file : Arrays.stream(folder.listFiles()).toList()) {
             if(!file.isDirectory()) {
                 // https://stackoverflow.com/questions/4574041/read-next-word-in-java
@@ -39,7 +42,7 @@ public class BayesSpamFilter {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-                // Read line by line
+                // Read line by line and put all words in a map
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
                     for (String word : line.split(" ")) {
@@ -56,6 +59,7 @@ public class BayesSpamFilter {
         return i;
     }
 
+    // Runs a folder
     private void runFolder(String path, double threshold) {
         File folder = new File(path);
         int ham = 0;
@@ -64,14 +68,19 @@ public class BayesSpamFilter {
             ham += runFile(file, threshold) ? 1 : 0;
             i++;
         }
+        // Log the relevant data
         System.out.println(String.format("(%4.2f) %s of %s Files in %s were classified as ham.", ((double)ham/i*100),ham, i, path));
     }
 
+    // Runs for each file
     private boolean runFile(File file, double threshold) {
+        // Read all words in the mail
         List<String> words = new ArrayList<>();
         fileContentsToList(file, words);
+        // Map all Word::Occurrences to Word::ChanceToOccurInMap
         Map<String, Double> probabilityHamMapPerWord = mapToProbabilityToOccur(learnedHamMap);
         Map<String, Double> probabilitySpamMapPerWord = mapToProbabilityToOccur(learnedSpamMap);
+        // Multiply all P(w|[S/H]) where w stands for word
         BigDecimal hamProb = BigDecimal.ONE;
         BigDecimal spamProb = BigDecimal.ONE;
         for(String word : words) {
@@ -85,6 +94,7 @@ public class BayesSpamFilter {
         BigDecimal denominator = (spamProb.multiply(spamThreshold)).add((hamProb).multiply(hamThreshold));
         BigDecimal hamProbabilityForMessage = (hamProb.multiply(hamThreshold)).divide(denominator, MathContext.DECIMAL128);
         BigDecimal spamProbabilityForMessage = (spamProb.multiply(spamThreshold)).divide(denominator, MathContext.DECIMAL128);
+        // Compare P(H|m) with P(S|m) where m stands for message
         return hamProbabilityForMessage.doubleValue() > spamProbabilityForMessage.doubleValue();
     }
 
