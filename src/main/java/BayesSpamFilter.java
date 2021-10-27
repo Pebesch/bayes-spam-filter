@@ -64,7 +64,7 @@ public class BayesSpamFilter {
             ham += runFile(file, threshold) ? 1 : 0;
             i++;
         }
-        System.out.println(String.format("(%4.2f) %s of %s Files in %s where classified as ham.", ((double)ham/i*100),ham, i, path));
+        System.out.println(String.format("(%4.2f) %s of %s Files in %s were classified as ham.", ((double)ham/i*100),ham, i, path));
     }
 
     private boolean runFile(File file, double threshold) {
