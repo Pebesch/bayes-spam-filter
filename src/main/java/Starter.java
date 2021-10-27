@@ -1,8 +1,4 @@
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
 import java.util.*;
 
 public class Starter {
@@ -43,11 +39,11 @@ public class Starter {
 
         // d) Run Test and print result
         // Read all HAM Mail
-        Double[] hamRun = Utils.run(Utils.returnListOfFilesInDir(testHam), S_THRESHOLD);
+        Double[] hamRun = Utils.run(Utils.returnListOfFilesInDir(testHam), S_THRESHOLD, hamWords, spamWords);
         Utils.printResult(hamRun, S_THRESHOLD, ALPHA);
 
         // Read all SPAM Mail
-        Double[] spamRun = Utils.run(Utils.returnListOfFilesInDir(testSpam), S_THRESHOLD);
+        Double[] spamRun = Utils.run(Utils.returnListOfFilesInDir(testSpam), S_THRESHOLD, hamWords, spamWords);
         Utils.printResult(spamRun, S_THRESHOLD, ALPHA);
     }
 }

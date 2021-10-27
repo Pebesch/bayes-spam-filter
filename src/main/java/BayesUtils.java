@@ -9,8 +9,8 @@ public class BayesUtils {
      * @param map the map to count occurrences
      * @return BigDecimal of count (all values for each key summed up)
      */
-    public static BigDecimal countOccurrencesInMap(Map<String, Double> map) {
-        return BigDecimal.valueOf(map.values().stream().reduce(0d, (a, b) -> a + b));
+    public static Double countOccurrencesInMap(Map<String, Double> map) {
+        return map.values().stream().reduce(0d, (a, b) -> a + b);
     }
 
     /**
@@ -19,12 +19,12 @@ public class BayesUtils {
      * @param map the map to search in
      * @return factor 1 (idempotent) if not present or 1 / all values in the map
      */
-    public static BigDecimal getProbabilityOfWordInMap(String word, Map<String, Double> map) {
+    public static Double getProbabilityOfWordInMap(String word, Map<String, Double> map) {
         // https://stackoverflow.com/questions/39851350/reducing-map-by-using-java-8-stream-api
         if(map.containsKey(word)) {
-            return BigDecimal.ONE.divide(countOccurrencesInMap(map), MathContext.DECIMAL128);
+            return 1 / countOccurrencesInMap(map);
         }
-        return BigDecimal.ONE;
+        return 1.0;
     }
 
 
@@ -32,15 +32,9 @@ public class BayesUtils {
      * Calculates the spam probability using Bayes theorem
      * @param spamProb
      * @param hamProb
-     * @param spamThreshold
-     * @return
+     * @return P(S|W_1,W_2,…)=P(W_1|S)*P(W_2|S)*…/( P(W_1|S)*P(W_2|S)…+ P(W_1|H)*P(W_2|H)…)
      */
-    public static BigDecimal getSpamProbability(BigDecimal spamProb, BigDecimal hamProb, BigDecimal spamThreshold) {
-        BigDecimal hamThreshold = BigDecimal.ONE.subtract(spamThreshold);
-        BigDecimal counter = spamThreshold.multiply(spamProb);
-        BigDecimal denominatorSpam = spamThreshold.multiply(spamProb);
-        BigDecimal denominatorHam = hamThreshold.multiply(hamProb);
-        BigDecimal denominator = denominatorSpam.add(denominatorHam, MathContext.DECIMAL128);
-        return counter.divide(denominator, MathContext.DECIMAL128);
+    public static BigDecimal getSpamProbability(BigDecimal spamProb, BigDecimal hamProb) {
+        return spamProb.divide(spamProb.add(hamProb), MathContext.DECIMAL128);
     }
 }
