@@ -1,12 +1,8 @@
-package draft;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BayesSpamFilter {
     private Map<String, Double> learnedHamMap = new HashMap<>();
