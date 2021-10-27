@@ -1,4 +1,5 @@
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class BayesUtils {
     public static BigDecimal getProbabilityOfWordInMap(String word, Map<String, Double> map) {
         // https://stackoverflow.com/questions/39851350/reducing-map-by-using-java-8-stream-api
         if(map.containsKey(word)) {
-            return BigDecimal.ONE.divide(countOccurrencesInMap(map), 128, RoundingMode.HALF_UP);
+            return BigDecimal.ONE.divide(countOccurrencesInMap(map), MathContext.DECIMAL128);
         }
         return BigDecimal.ONE;
     }
@@ -36,11 +37,10 @@ public class BayesUtils {
      */
     public static BigDecimal getSpamProbability(BigDecimal spamProb, BigDecimal hamProb, BigDecimal spamThreshold) {
         BigDecimal hamThreshold = BigDecimal.ONE.subtract(spamThreshold);
-        // Divide the spam bias * spam values by (spam bias * spam values) + (ham bias * ham values)
         BigDecimal counter = spamThreshold.multiply(spamProb);
         BigDecimal denominatorSpam = spamThreshold.multiply(spamProb);
         BigDecimal denominatorHam = hamThreshold.multiply(hamProb);
-        BigDecimal denominator = denominatorSpam.add(denominatorHam);
-        return (counter.divide(denominator, 128, RoundingMode.HALF_UP));
+        BigDecimal denominator = denominatorSpam.add(denominatorHam, MathContext.DECIMAL128);
+        return counter.divide(denominator, MathContext.DECIMAL128);
     }
 }
